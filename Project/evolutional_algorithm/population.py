@@ -27,10 +27,12 @@ class Population:
     def _create_children(self, parents):
         children = []
         for first_parent, second_parent in zip(parents[::2], parents[1::2]:
-            children.append(Individual.create_child(first_parent, second_parent))
+            child = Individual.create_child(first_parent, second_parent)
+            child.mutate()
+            children.append(child)
         return children
 
-    def _update_population(self):
+    def _update_population(self, children):
         pass
 
     def evolve(self, amount_of_iterations):
