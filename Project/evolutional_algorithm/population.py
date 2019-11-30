@@ -39,6 +39,9 @@ class Population:
                 best_fitness = individual_fitness
         self._best_solution = best
 
+    def print_best_solution(self):
+        print(f"{self._best_solution.get_information()} : {self._best_solution.evaluate_fitness(population._problem)}")
+
     def roulette_select_individual(self, candidates_with_fitness):
         fitness_sum = sum(1/candidate[1] for candidate in candidates_with_fitness)
         spin = random()
