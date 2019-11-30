@@ -1,15 +1,17 @@
-from random import randint
+from random import randint, random
 from statistics import mean
-from math import ceil
+from math import ceil, floor
 
 
 class Individual:
-    _MUTATIONS_RATIO = 2/10  # percentage of genes that get changed
+    _MUTATIONS_CHANCE = 1/5  # percentage of genes that get changed
+    _MUTATIONS_AMOUNT = 1/5
 
     def __init__(self, solution):
         self._solution = solution
 
     def evaluate_fitness(self, received_points):
+        # to do
         amount_of_cookies = sum(self._solution)
         penalty = 0
         for left_child, left_cookies, right_child, right_cookies in zip(received_points[:-1], self._solution[:-1], received_points[1:], self._solution[1:]):
@@ -21,16 +23,13 @@ class Individual:
         return amount_of_cookies + penalty
 
     def create_child(self, other_individual):
-        if other_individual is None:
-            print("WTF")
-        child_solution = [ceil(mean((first_gene, second_gene))) for first_gene, second_gene in zip(self._solution, other_individual._solution)]
+        child_solution = [floor(mean((first_gene, second_gene))) for first_gene, second_gene in zip(self._solution, other_individual._solution)]
         return Individual(child_solution)
 
     def mutate(self, min_score, max_score):
-        solution_length = len(self._solution)
-        amount_of_mutations = self._MUTATIONS_RATIO*solution_length
-        for mutation in range(ceil(amount_of_mutations)):
-            self._solution[randint(0, solution_length-1)] = randint(min_score, max_score)
+        while random() < self._MUTATIONS_CHANCE:
+            for mutation in range(ceil(len(self._solution)*self._MUTATIONS_AMOUNT)):
+                self._solution[randint(0, len(self._solution)-1)] = randint(min_score, max_score)
 
     def get_information(self):
         text = ""
