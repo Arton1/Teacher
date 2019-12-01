@@ -4,9 +4,9 @@ from math import ceil
 
 
 class Population:
-    _AMOUNT_OF_CANDIDATES = 200
-    _AMOUNT_OF_CHILDREN = 150
-    _TOURNAMENT_SIZE = 4/50
+    _AMOUNT_OF_CANDIDATES = 100
+    _AMOUNT_OF_CHILDREN = 200
+    _TOURNAMENT_SIZE = 8/50
 
     def __init__(self,
                  problem,
@@ -43,6 +43,21 @@ class Population:
     def print_best_solution(self):
         print(f"{self._best_solution.get_information()} : {self._best_solution.evaluate_fitness(self._problem)}")
 
+    def print_best_solution_from_generation(self):
+        best = self._candidates[0]
+        best_fitness = best.evaluate_fitness(self._problem)
+        for individual in self._candidates[1:]:
+            individual_fitness = individual.evaluate_fitness(self._problem)
+            if best_fitness > individual_fitness:
+                best = individual
+                best_fitness = individual_fitness
+        print(f"Generacja: {self._generation} : {best.get_information()} : {best_fitness}")
+
+    def print_information(self):
+        print(f"Generacja: {self._generation}")
+        for index, individual in enumerate(sorted(self._candidates, key=lambda x: x.evaluate_fitness(self._problem))):
+            print(f"{index+1}: {individual.get_information()} : {individual.evaluate_fitness(self._problem)}")
+
     def roulette_select_individual(self, candidates_with_fitness):
         fitness_sum = sum(1/fitness for candidate, fitness in candidates_with_fitness)
         spin = random()
@@ -77,11 +92,12 @@ class Population:
 
     def _create_children(self):
         children = []
-        for child_index in range(self._children_amount):
+        for pair in range(0, self._children_amount, 2):
             first_parent, second_parent = self._select_pair_of_parents()
-            child = Individual.create_child(first_parent, second_parent)
-            child.mutate(1, self._maximum_gene)
-            children.append(child)
+            pair_of_children = Individual.create_pair_by_multipoints(first_parent, second_parent)
+            for child in pair_of_children:
+                child.mutate(1, self._maximum_gene)
+                children.append(child)
         return children
 
     def _update_population(self, children):
@@ -92,13 +108,10 @@ class Population:
         self._candidates = list(map(lambda x: x[0], candidates_with_fitness[:len(self._candidates)]))
 
     def evolve(self, amount_of_iterations=1):
+        self.print_best_solution_from_generation()
         for i in range(amount_of_iterations):
             children = self._create_children()
             self._update_population(children)
             self._set_best()
             self._generation += 1
-
-    def print_information(self):
-        print(f"Generacja: {self._generation}")
-        for index, individual in enumerate(sorted(self._candidates, key=lambda x: x.evaluate_fitness(self._problem))):
-            print(f"{index+1}: {individual.get_information()} : {individual.evaluate_fitness(self._problem)}")
+            self.print_best_solution_from_generation()
