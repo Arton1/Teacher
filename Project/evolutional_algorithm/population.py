@@ -5,7 +5,7 @@ from math import ceil
 
 class Population:
     _AMOUNT_OF_CANDIDATES = 200
-    _AMOUNT_OF_CHILDREN = 40
+    _AMOUNT_OF_CHILDREN = 150
     _TOURNAMENT_SIZE = 4/50
 
     def __init__(self,
@@ -58,15 +58,21 @@ class Population:
         return min(tournament_candidates, key=lambda x: x[1])[0]
 
     def ranking_select_individual(self, candidates_with_fitness):
-        # to do
-        candidates_with_fitness.sort(key=lambda x: x[1], reversed=True)
+        candidates_with_fitness.sort(key=lambda x: x[1], reverse=True)
+        rank_sum = (len(candidates_with_fitness)+1)*len(candidates_with_fitness)/2
+        spin = randint(0, rank_sum)
+        index_sum = 0
+        for index, (candidate, fitness) in enumerate(candidates_with_fitness, start=1):
+            if spin <= index_sum + index:
+                return candidate
+            index_sum += index
 
     def _select_pair_of_parents(self):
         candidates_with_fitness = [(individual, individual.evaluate_fitness(self._problem)) for individual in self._candidates]
-        first_parent = self.tournament_select_individual(candidates_with_fitness)
+        first_parent = self.ranking_select_individual(candidates_with_fitness)
         candidates_without_first_parent = [(individual, fitness) for individual, fitness in candidates_with_fitness if individual != first_parent]
         del candidates_with_fitness
-        second_parent = self.tournament_select_individual(candidates_without_first_parent)
+        second_parent = self.ranking_select_individual(candidates_without_first_parent)
         return first_parent, second_parent
 
     def _create_children(self):
@@ -89,7 +95,7 @@ class Population:
         for i in range(amount_of_iterations):
             children = self._create_children()
             self._update_population(children)
-            # self._set_best()
+            self._set_best()
             self._generation += 1
 
     def print_information(self):
