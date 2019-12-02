@@ -4,8 +4,8 @@ from math import ceil
 
 
 class Population:
-    _AMOUNT_OF_CANDIDATES = 100
-    _AMOUNT_OF_CHILDREN = 200
+    _AMOUNT_OF_CANDIDATES = 125
+    _AMOUNT_OF_CHILDREN = 125
     _TOURNAMENT_SIZE = 8/50
 
     def __init__(self,

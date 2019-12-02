@@ -11,7 +11,7 @@ class Individual:
     def __init__(self, solution):
         self._solution = solution
 
-    def evaluate_fitness(self, problem):
+    def evaluate_fitness2(self, problem):
         amount_of_cookies = sum(self._solution)
         penalty = 0
         for (index, left_child), left_cookies, right_child, right_cookies in zip(enumerate(problem[:-1]), self._solution[:-1], problem[1:], self._solution[1:]):
@@ -32,23 +32,42 @@ class Individual:
                     if(self._solution[index-1] == self._solution[index]):
                         const_penalty += 1
                     index -= 1
-            elif left_child == right_child and not left_cookies == right_cookies:
-                if left_cookies < right_cookies:
-                    while True:
-                        penalty += right_cookies - left_cookies + 2
-                        if not (index > 0 and problem[index-1] >= problem[index]):
-                            break
-                        if(self._solution[index-1] == self._solution[index]):
-                            const_penalty += 1
-                        index -= 1
-                elif left_cookies > right_cookies:
-                    while True:
-                        penalty += left_cookies - right_cookies + 2
-                        if not (index < len(problem)-1 and problem[index+1] >= problem[index]):
-                            break
-                        if(self._solution[index+1] == self._solution[index]):
-                            const_penalty += 1
-                        index += 1
+            elif left_child == right_child:
+                index += 1
+                while left_child == problem[index]:
+                    index += 1
+                if index < len(problem) and left_child < problem[index] and not left_cookies < self._solution[index]:
+                    penalty += left_cookies - self._solution[index] + const_penalty
+                elif index < len(problem) and left_child > problem[index] and not left_cookies > self._solution[index]:
+                    penalty += self._solution[index] - left_cookies + const_penalty
+
+        return amount_of_cookies + penalty
+
+    def evaluate_fitness(self, problem):
+        amount_of_cookies = sum(self._solution)
+        penalty = 0
+        solution = self._solution
+        left_index = 0
+        right_index = 1
+        while right_index < len(problem):
+            if problem[left_index] < problem[right_index] and not solution[left_index] < solution[right_index]:
+                penalty += solution[left_index] - solution[right_index] + 2
+                if left_index == right_index - 1 or (problem[left_index] < problem[left_index+1] and right_index != left_index+1):
+                    propagation_index = right_index + 1
+                    while propagation_index < len(problem) and problem[propagation_index-1] <= problem[propagation_index]:
+                        penalty += solution[left_index] - solution[right_index] + 2
+                        propagation_index += 1
+            if problem[left_index] > problem[right_index] and not solution[left_index] > solution[right_index]:
+                penalty += solution[right_index] - solution[left_index] + 2
+                if left_index == right_index - 1 or (problem[right_index-1] > problem[right_index] and right_index != left_index+1):
+                    propagation_index = left_index- 1
+                    while propagation_index >= 0 and problem[propagation_index+1] <= problem[propagation_index]:
+                        penalty += solution[right_index] - solution[left_index] + 2
+                        propagation_index -= 1
+            if left_index == right_index-1 or problem[right_index-1] == problem[right_index]:
+                right_index += 1
+            if right_index < len(problem) and problem[right_index-1] != problem[right_index]:
+                left_index += 1
         return amount_of_cookies + penalty
 
     def create_child_by_mean(self, other_individual):
