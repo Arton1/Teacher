@@ -14,7 +14,7 @@ class Population:
                  children_amount=_AMOUNT_OF_CHILDREN,
                  ):
         self._problem = problem
-        self._candidates = []
+        self._candidates_with_fitness = []
         self._generation = 0
         self._children_amount = children_amount
         self._tournament_size = ceil(candidates_amount*self._TOURNAMENT_SIZE)
@@ -25,21 +25,22 @@ class Population:
             self._maximum_gene = len(self._problem)
         for i in range(candidates_amount):
             solution = [randint(1, self._maximum_gene) for child in problem]
-            self._candidates.append(Individual(solution))
-        self._best_solution = max(self._candidates, key=lambda x: x.evaluate_fitness(self._problem))
+            individual = Individual(solution)
+            fitness = individual.evaluate_fitness(problem)
+            self._candidates.append((individual, fitness))
+        self._best_solution = max(self._candidates_with_fitness, key=lambda x: x[1])
 
     def _set_best(self):
-        best = self._best_solution
-        best_fitness = best.evaluate_fitness(self._problem)
-        for individual in self._candidates:
-            individual_fitness = individual.evaluate_fitness(self._problem)
-            if best_fitness > individual_fitness:
+        best, best_fitness = self._best_solution
+        for individual, fitness in self._candidates_with_fitness:
+            if best_fitness > fitness:
                 best = individual
-                best_fitness = individual_fitness
-        self._best_solution = best
+                best_fitness = fitness
+        self._best_solution = (best, best_fitness)
 
     def print_best_solution(self):
-        print(f"{self._best_solution.get_information()} : {self._best_solution.evaluate_fitness(self._problem)}")
+        individual, fitness = self._best_solution
+        print(f"{individual.get_information()} : {fitness}")
 
     def print_best_solution_from_generation(self):
         best = self._candidates[0]
