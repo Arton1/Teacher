@@ -24,9 +24,7 @@ class Population:
         if len(self._problem) < self._maximum_gene:
             self._maximum_gene = len(self._problem)
         for i in range(candidates_amount):
-            solution = [randint(1, self._maximum_gene)
-                        for child in problem
-                        ]
+            solution = [randint(1, self._maximum_gene) for child in problem]
             self._candidates.append(Individual(solution))
         self._best_solution = max(self._candidates, key=lambda x: x.evaluate_fitness(self._problem))
 
