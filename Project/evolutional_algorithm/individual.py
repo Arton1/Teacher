@@ -70,3 +70,6 @@ class Individual:
         for value in self._solution:
             text += f"{value} "
         return text[0:-1]
+    
+    def get_sum_of_cookies(self):
+        return sum(self._solution)

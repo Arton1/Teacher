@@ -4,9 +4,9 @@ from math import ceil
 
 
 class Population:
-    _AMOUNT_OF_CANDIDATES = 150
-    _AMOUNT_OF_CHILDREN = 150
-    _TOURNAMENT_SIZE = 8/50
+    _AMOUNT_OF_CANDIDATES = 200
+    _AMOUNT_OF_CHILDREN = 150 
+    _TOURNAMENT_SIZE = 30/100
 
     def __init__(self,
                  problem,
@@ -27,7 +27,7 @@ class Population:
             solution = [randint(1, self._maximum_gene) for child in problem]
             individual = Individual(solution)
             fitness = individual.evaluate_fitness(problem)
-            self._candidates.append((individual, fitness))
+            self._candidates_with_fitness.append((individual, fitness))
         self._best_solution = max(self._candidates_with_fitness, key=lambda x: x[1])
 
     def _set_best(self):
@@ -43,21 +43,19 @@ class Population:
         print(f"{individual.get_information()} : {fitness}")
 
     def print_best_solution_from_generation(self):
-        best = self._candidates[0]
-        best_fitness = best.evaluate_fitness(self._problem)
-        for individual in self._candidates[1:]:
-            individual_fitness = individual.evaluate_fitness(self._problem)
-            if best_fitness > individual_fitness:
+        best, best_fitness = self._candidates_with_fitness[0]
+        for individual, fitness in self._candidates_with_fitness[1:]:
+            if best_fitness > fitness:
                 best = individual
-                best_fitness = individual_fitness
+                best_fitness = fitness
         print(f"Generacja: {self._generation} : {best.get_information()} : {best_fitness}")
 
     def print_information(self):
         print(f"Generacja: {self._generation}")
-        for index, individual in enumerate(sorted(self._candidates, key=lambda x: x.evaluate_fitness(self._problem))):
-            print(f"{index+1}: {individual.get_information()} : {individual.evaluate_fitness(self._problem)}")
+        for index, (individual, fitness) in enumerate(sorted(self._candidates, key=lambda x: x[1])):
+            print(f"{index+1}: {individual.get_information()} : {fitness}")
 
-    def roulette_select_individual(self, candidates_with_fitness):
+    def _roulette_select_individual(self, candidates_with_fitness):
         fitness_sum = sum(1/fitness for candidate, fitness in candidates_with_fitness)
         spin = random()
         probability_sum = 0
@@ -65,51 +63,56 @@ class Population:
             probability = 1 / (fitness*fitness_sum)
             probability_sum += probability
             if probability_sum > spin:
-                return potential_parent
+                return potential_parent, fitness
 
-    def tournament_select_individual(self, candidates_with_fitness):
+    def _tournament_select_individual(self, candidates_with_fitness):
         tournament_candidates = sample(candidates_with_fitness, self._tournament_size)
-        return min(tournament_candidates, key=lambda x: x[1])[0]
+        return min(tournament_candidates, key=lambda x: x[1])
 
-    def ranking_select_individual(self, candidates_with_fitness):
+    def _ranking_select_individual(self, candidates_with_fitness):
         candidates_with_fitness.sort(key=lambda x: x[1], reverse=True)
         rank_sum = (len(candidates_with_fitness)+1)*len(candidates_with_fitness)/2
         spin = randint(0, rank_sum)
         index_sum = 0
         for index, (candidate, fitness) in enumerate(candidates_with_fitness, start=1):
             if spin <= index_sum + index:
-                return candidate
+                return candidate, fitness
             index_sum += index
 
+    def _best_select_individual(self, candidates_with_fitness):
+        return min(candidates_with_fitness, key=lambda x: x[1])
+
     def _select_pair_of_parents(self):
-        candidates_with_fitness = [(individual, individual.evaluate_fitness(self._problem)) for individual in self._candidates]
-        first_parent = self.ranking_select_individual(candidates_with_fitness)
-        candidates_without_first_parent = [(individual, fitness) for individual, fitness in candidates_with_fitness if individual != first_parent]
-        del candidates_with_fitness
-        second_parent = self.ranking_select_individual(candidates_without_first_parent)
-        return first_parent, second_parent
+        first_parent_with_fitness = self._tournament_select_individual(self._candidates_with_fitness)
+        self._candidates_with_fitness.remove(first_parent_with_fitness)
+        second_parent_with_fitness = self._tournament_select_individual(self._candidates_with_fitness)
+        self._candidates_with_fitness.append(first_parent_with_fitness)
+        return first_parent_with_fitness, second_parent_with_fitness
 
     def _create_children(self):
-        children = []
+        children_with_fitness = []
         for pair in range(0, self._children_amount, 2):
-            first_parent, second_parent = self._select_pair_of_parents()
+            (first_parent, first_parent_fitness), (second_parent, second_parent_fitness) = self._select_pair_of_parents()
             pair_of_children = Individual.create_pair_by_multipoints(first_parent, second_parent)
             for child in pair_of_children:
                 child.mutate(1, self._maximum_gene)
-                children.append(child)
-        return children
+                children_with_fitness.append((child, child.evaluate_fitness(self._problem)))
+        return children_with_fitness
 
-    def _update_population(self, children):
-        candidates_with_fitness = [(individual, individual.evaluate_fitness(self._problem)) for individual in self._candidates]
-        for individual in children:
-            candidates_with_fitness.append((individual, individual.evaluate_fitness(self._problem)))
-        candidates_with_fitness.sort(key=lambda x: x[1])
-        self._candidates = list(map(lambda x: x[0], candidates_with_fitness[:len(self._candidates)]))
+    def _update_population(self, children_with_fitness):
+        candidates = self._candidates_with_fitness
+        candidates.extend(children_with_fitness)
+        candidates.sort(key=lambda x: x[1])
+        self._candidates_with_fitness = candidates[:len(candidates)]
 
     def evolve(self, amount_of_iterations=1):
         self.print_best_solution_from_generation()
         for i in range(amount_of_iterations):
-            children = self._create_children()
-            self._update_population(children)
+            children_with_fitness = self._create_children()
+            self._update_population(children_with_fitness)
             self._generation += 1
             self.print_best_solution_from_generation()
+        self._set_best()
+
+    def print_solution(self):
+        print(f"Rozwiązanie: {self._best_solution[1]}")
