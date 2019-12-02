@@ -5,7 +5,7 @@ from math import ceil, floor
 
 class Individual:
     _MUTATIONS_CHANCE = 1/5  # percentage of genes that get changed
-    _MUTATIONS_AMOUNT = 1/15
+    _MUTATIONS_AMOUNT = 1/30
     _AMOUNT_OF_POINTS = 1/5
 
     def __init__(self, solution):
@@ -28,7 +28,7 @@ class Individual:
             if problem[left_index] > problem[right_index] and not solution[left_index] > solution[right_index]:
                 penalty += solution[right_index] - solution[left_index] + 2
                 if left_index == right_index - 1 or (problem[right_index-1] > problem[right_index] and right_index != left_index+1):
-                    propagation_index = left_index- 1
+                    propagation_index = left_index - 1
                     while propagation_index >= 0 and problem[propagation_index+1] <= problem[propagation_index]:
                         penalty += solution[right_index] - solution[left_index] + 2
                         propagation_index -= 1

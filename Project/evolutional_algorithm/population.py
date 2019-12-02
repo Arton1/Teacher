@@ -4,8 +4,8 @@ from math import ceil
 
 
 class Population:
-    _AMOUNT_OF_CANDIDATES = 125
-    _AMOUNT_OF_CHILDREN = 125
+    _AMOUNT_OF_CANDIDATES = 150
+    _AMOUNT_OF_CHILDREN = 150
     _TOURNAMENT_SIZE = 8/50
 
     def __init__(self,
@@ -20,7 +20,7 @@ class Population:
         self._tournament_size = ceil(candidates_amount*self._TOURNAMENT_SIZE)
         if self._tournament_size % 2 == 1:
             self._tournament_size -= 1
-        self._maximum_gene = max(self._problem)
+        self._maximum_gene = len(set(self._problem))
         if len(self._problem) < self._maximum_gene:
             self._maximum_gene = len(self._problem)
         for i in range(candidates_amount):
@@ -112,6 +112,5 @@ class Population:
         for i in range(amount_of_iterations):
             children = self._create_children()
             self._update_population(children)
-            self._set_best()
             self._generation += 1
             self.print_best_solution_from_generation()
